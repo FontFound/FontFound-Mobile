@@ -45,6 +45,8 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material3)
+    implementation(libs.material)
+    implementation(libs.androidx.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.material3.android)
@@ -59,6 +61,6 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.material3)
     implementation(libs.androidx.compose.material3.material3)
+    debugImplementation(libs.androidx.ui.tooling)
 }
