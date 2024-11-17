@@ -25,10 +25,17 @@ fun SettingsScreen() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
             ) {
-                Text("Dark Mode", style = MaterialTheme.typography.bodyLarge)
-                Text("Change app appearance", style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray))
+                Text(
+                    "Dark Mode",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    "Change app appearance",
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
+                )
             }
             Switch(
                 checked = false,
@@ -55,6 +62,8 @@ fun SettingsScreen() {
                 onCheckedChange = {}
             )
         }
+
+        HorizontalDivider()
     }
 }
 
