@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -20,17 +21,20 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.android.fontfound.navigation.Navigation
 import com.android.fontfound.navigation.TopLevelDestination
+import com.android.fontfound.ui.settings.SettingsViewModel
 
 @Composable
-fun MainScreen(){
+fun MainScreen(viewModel: SettingsViewModel) {
     val navController = rememberNavController()
 
     Scaffold(
-        bottomBar = { BottomBar(navController = navController)}
+        bottomBar = { BottomBar(navController = navController) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Navigation(
             navController = navController,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            settingsViewModel = viewModel
         )
     }
 }

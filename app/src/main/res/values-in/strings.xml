@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">FontFound</string>
+    <string name="language">Bahasa</string>
+    <string name="language_desc">Ganti bahasa aplikasi</string>
+    <string name="dark_mode">Mode Malam</string>
+    <string name="dark_mode_desc">Ganti tampilan aplikasi</string>
+    <string name="scan_title">Pindai</string>
+    <string name="history_title">Sejarah</string>
+    <string name="settings_title">Pengaturan</string>
+</resources>

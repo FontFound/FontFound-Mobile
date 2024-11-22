@@ -9,14 +9,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.android.fontfound.R
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(viewModel: SettingsViewModel) {
+    val isDarkMode = viewModel.getThemeSettings().observeAsState(initial = false)
+
     Column {
         Row(
             modifier = Modifier
@@ -24,22 +28,14 @@ fun SettingsScreen() {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-            ) {
-                Text(
-                    "Dark Mode",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Text(
-                    "Change app appearance",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.dark_mode), style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.dark_mode_desc), style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
                 )
             }
             Switch(
-                checked = false,
-                onCheckedChange = {}
+                checked = isDarkMode.value,
+                onCheckedChange = { viewModel.saveThemeSetting(it) }
             )
         }
 
@@ -54,8 +50,8 @@ fun SettingsScreen() {
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Language", style = MaterialTheme.typography.bodyLarge)
-                Text("Change app language", style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray))
+                Text(stringResource(R.string.language), style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.language_desc), style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray))
             }
             Switch(
                 checked = false,
@@ -65,10 +61,4 @@ fun SettingsScreen() {
 
         HorizontalDivider()
     }
-}
-
-@Composable
-@Preview
-fun SettingsScreenPreview() {
-    SettingsScreen()
 }

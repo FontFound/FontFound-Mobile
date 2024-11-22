@@ -8,11 +8,13 @@ import androidx.navigation.compose.composable
 import com.android.fontfound.ui.history.HistoryScreen
 import com.android.fontfound.ui.scan.ScanScreen
 import com.android.fontfound.ui.settings.SettingsScreen
+import com.android.fontfound.ui.settings.SettingsViewModel
 
 @Composable
 fun Navigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
+    settingsViewModel: SettingsViewModel
 ) {
     NavHost(
         navController = navController,
@@ -26,7 +28,7 @@ fun Navigation(
             ScanScreen()
         }
         composable(TopLevelDestination.Settings.route) {
-            SettingsScreen()
+            SettingsScreen(viewModel = settingsViewModel)
         }
     }
 }
