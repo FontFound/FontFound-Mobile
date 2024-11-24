@@ -22,4 +22,14 @@ class SettingsViewModel @Inject constructor(
             pref.saveThemeSetting(isDarkModeActive)
         }
     }
+
+    fun getLanguageSetting(): LiveData<String> {
+        return pref.getLanguageSetting().asLiveData()
+    }
+
+    fun saveLanguageSetting(language: String) {
+        viewModelScope.launch {
+            pref.saveLanguageSetting(language)
+        }
+    }
 }

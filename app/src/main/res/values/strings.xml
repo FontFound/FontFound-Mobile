@@ -2,6 +2,8 @@
     <string name="app_name">FontFound</string>
     <string name="language">Language</string>
     <string name="language_desc">Change app language</string>
+    <string name="language_english">English</string>
+    <string name="language_indonesian">Indonesian</string>
     <string name="dark_mode">Dark Mode</string>
     <string name="dark_mode_desc">Change app appearance</string>
     <string name="scan_title">Scan</string>

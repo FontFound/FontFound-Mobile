@@ -11,16 +11,30 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import com.android.fontfound.ui.MainScreen
 import com.android.fontfound.ui.settings.SettingsViewModel
+import com.android.fontfound.ui.settings.updateLocale
 import com.android.fontfound.ui.theme.Theme
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Locale
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val viewModel: SettingsViewModel by viewModels()
+
+        viewModel.getLanguageSetting().observe(this) { language ->
+            val languageCode = when (language) {
+                "Indonesian" -> "id"
+                else -> "en"
+            }
+            if (Locale.getDefault().language != languageCode) {
+                updateLocale(this, languageCode)
+            }
+        }
+
         setContent {
-            val viewModel: SettingsViewModel by viewModels()
             val isDarkMode = viewModel.getThemeSettings().observeAsState(initial = false)
 
             Theme(isDarkTheme = isDarkMode.value) {
