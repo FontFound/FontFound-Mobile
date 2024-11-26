@@ -13,6 +13,7 @@ import com.android.fontfound.ui.settings.SettingsScreen
 fun Navigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
+    onShowBottomBar: (Boolean) -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -20,12 +21,15 @@ fun Navigation(
         modifier = modifier
     ) {
         composable(TopLevelDestination.History.route) {
+            onShowBottomBar(true)
             HistoryScreen()
         }
         composable(TopLevelDestination.Scan.route) {
-            ScanScreen()
+            onShowBottomBar(false)
+            ScanScreen(navController)
         }
         composable(TopLevelDestination.Settings.route) {
+            onShowBottomBar(true)
             SettingsScreen()
         }
     }

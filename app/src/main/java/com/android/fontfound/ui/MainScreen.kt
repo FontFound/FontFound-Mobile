@@ -10,8 +10,13 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -22,15 +27,28 @@ import com.android.fontfound.navigation.Navigation
 import com.android.fontfound.navigation.TopLevelDestination
 
 @Composable
-fun MainScreen(){
+@Preview
+fun MainScreen() {
     val navController = rememberNavController()
+    var showBottomBar by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        navController.navigate(TopLevelDestination.History.route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                inclusive = true
+            }
+        }
+    }
 
     Scaffold(
-        bottomBar = { BottomBar(navController = navController)}
+        bottomBar = {
+            if(showBottomBar) BottomBar(navController = navController)
+        }
     ) { innerPadding ->
         Navigation(
             navController = navController,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            onShowBottomBar = { showBottomBar = it }
         )
     }
 }
@@ -46,7 +64,7 @@ fun BottomBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    NavigationBar  {
+    NavigationBar {
         pages.forEach { page ->
             AddItem(
                 page = page,
