@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">FontFound</string>
+    <string name="firebaseml_model_download_failed">Download Model Failed</string>
 </resources>

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "878732805060",
+    "project_id": "fir-ml-dicoding-de265",
+    "storage_bucket": "fir-ml-dicoding-de265.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:878732805060:android:c44944e2e4d4b7d2901a91",
+        "android_client_info": {
+          "package_name": "com.android.fontfound"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyhaWCNaUXLWL7aSXc4VKiKRUugzJvEu8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:878732805060:android:d11760a8b673459d901a91",
+        "android_client_info": {
+          "package_name": "com.dicoding.latihantensorflowliteprediction"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyhaWCNaUXLWL7aSXc4VKiKRUugzJvEu8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

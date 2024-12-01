@@ -3,6 +3,8 @@ package com.android.fontfound.ui.scan
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -24,12 +26,24 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import com.android.fontfound.R
+import com.google.firebase.ml.modeldownloader.CustomModel
+import com.google.firebase.ml.modeldownloader.CustomModelDownloadConditions
+import com.google.firebase.ml.modeldownloader.DownloadType
+import com.google.firebase.ml.modeldownloader.FirebaseModelDownloader
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
+import org.tensorflow.lite.InterpreterApi
+import org.tensorflow.lite.gpu.GpuDelegateFactory
 import java.io.File
+import java.io.IOException
 import java.util.concurrent.Executors
+
+
+private var interpreter: InterpreterApi? = null
+private const val TAG = "ScanScreen"
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,9 +67,12 @@ fun ScanScreen(navController: NavHostController) {
     )
 
     LaunchedEffect(Unit) {
+        // Request camera permission
         if (ContextCompat.checkSelfPermission(context, cameraPermission) != PackageManager.PERMISSION_GRANTED) {
             launcher.launch(cameraPermission)
         }
+
+        // Initialize CameraX
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
             val preview = Preview.Builder().build().also {
@@ -67,13 +84,30 @@ fun ScanScreen(navController: NavHostController) {
 
             try {
                 cameraProvider.unbindAll()
-                val camera = cameraProvider.bindToLifecycle(
+                cameraProvider.bindToLifecycle(
                     lifecycleOwner, cameraSelector, preview, imageCapture
                 )
             } catch (e: Exception) {
                 Log.e("CameraX", "Failed to bind camera use cases", e)
             }
         }, ContextCompat.getMainExecutor(context))
+
+        // Download the Firebase model
+        downloadModel(
+            context = context,
+            onDownloadSuccess = {
+                Toast.makeText(context, "Model downloaded successfully", Toast.LENGTH_SHORT).show()
+            },
+            onError = { errorMessage ->
+                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            interpreter?.close()
+        }
     }
 
     Column(
@@ -81,9 +115,8 @@ fun ScanScreen(navController: NavHostController) {
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         TopAppBar(
-            title = {Text(text = "Scan Font")},
+            title = { Text(text = "Scan Font") },
             navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
@@ -117,12 +150,11 @@ fun ScanScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Flash button
             IconButton(
                 onClick = {
                     isFlashEnabled = !isFlashEnabled
                     camera?.cameraControl?.enableTorch(isFlashEnabled)
-                          },
+                },
                 modifier = Modifier.padding(end = 16.dp)
             ) {
                 Icon(
@@ -133,7 +165,7 @@ fun ScanScreen(navController: NavHostController) {
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -174,12 +206,12 @@ fun CaptureButton(imageCapture: ImageCapture?, context: Context) {
     }
 }
 
-//fun isConnectedToInternet(context: Context): Boolean {
-//    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-//    val network = connectivityManager.activeNetwork ?: return false
-//    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-//    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-//}
+fun isConnectedToInternet(context: Context): Boolean {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = connectivityManager.activeNetwork ?: return false
+    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+}
 
 fun uploadToCloud(photoFile: File, deviceId: String) {
     val client = OkHttpClient()
@@ -199,4 +231,55 @@ fun uploadToCloud(photoFile: File, deviceId: String) {
 
 fun saveLocally(photoFile: File) {
     Log.d("CameraX", "Saved locally: ${photoFile.path}")
+}
+
+@Synchronized
+private fun downloadModel(
+    context: Context,
+    onDownloadSuccess: () -> Unit,
+    onError: (String) -> Unit
+) {
+    val conditions = CustomModelDownloadConditions.Builder()
+        .requireWifi()
+        .build()
+
+    FirebaseModelDownloader.getInstance()
+        .getModel("scan-item", DownloadType.LOCAL_MODEL, conditions)
+        .addOnSuccessListener { model: CustomModel ->
+            try {
+                // Periksa apakah model sudah tersedia
+                if (model.file != null && model.file!!.exists()) {
+                    Log.d(TAG, "Model already exists locally at: ${model.file!!.absolutePath}")
+                } else {
+                    Log.d(TAG, "Model file not found locally, re-downloading...")
+                    initializeInterpreter(model, onError)
+                    onDownloadSuccess()
+                }
+            } catch (e: IOException) {
+                onError("Failed to initialize interpreter: ${e.message}")
+            }
+        }
+        .addOnFailureListener { e: Exception ->
+            onError(context.getString(R.string.firebaseml_model_download_failed))
+            Log.e(TAG, "Failed to download model: ${e.message}")
+        }
+}
+
+
+private fun initializeInterpreter(
+    model: CustomModel,
+    onError: (String) -> Unit
+) {
+    interpreter?.close()
+    try {
+        val options = InterpreterApi.Options()
+            .setRuntime(InterpreterApi.Options.TfLiteRuntime.FROM_SYSTEM_ONLY)
+            .addDelegateFactory(GpuDelegateFactory())
+        model.file?.let {
+            interpreter = InterpreterApi.create(it, options)
+        }
+    } catch (e: Exception) {
+        onError(e.message.toString())
+        Log.e(TAG, e.message.toString())
+    }
 }
