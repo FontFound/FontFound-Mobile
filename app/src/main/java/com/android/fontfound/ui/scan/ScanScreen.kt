@@ -199,7 +199,7 @@ fun CaptureButton(imageCapture: ImageCapture?, context: Context) {
         }
     ) {
         Icon(
-            painter = painterResource(id = R.drawable.ic_camera),
+            painter = painterResource(id = R.drawable.ic_capture),
             contentDescription = "Capture",
             tint = Color.White
         )
@@ -244,7 +244,7 @@ private fun downloadModel(
         .build()
 
     FirebaseModelDownloader.getInstance()
-        .getModel("scan-item", DownloadType.LOCAL_MODEL, conditions)
+        .getModel("font-found", DownloadType.LOCAL_MODEL, conditions)
         .addOnSuccessListener { model: CustomModel ->
             try {
                 // Periksa apakah model sudah tersedia

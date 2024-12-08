@@ -1,28 +1,40 @@
 package com.android.fontfound.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.android.fontfound.R
 import com.android.fontfound.navigation.Navigation
 import com.android.fontfound.navigation.TopLevelDestination
 
@@ -64,14 +76,56 @@ fun BottomBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    NavigationBar {
-        pages.forEach { page ->
-            AddItem(
-                page = page,
-                currentDestination = currentDestination,
-                navController = navController
-            )
+    Box {
+        // Navigation Bar Background
+        NavigationBar {
+            pages.forEachIndexed { index, page ->
+                if (index != 1) { // Skip the middle button
+                    AddItem(
+                        page = page,
+                        currentDestination = currentDestination,
+                        navController = navController
+                    )
+                } else {
+                    Spacer(modifier = Modifier.weight(1f)) // Leave space for middle button
+                }
+            }
         }
+
+        // Floating Camera Button
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset(y = -30.dp) // Raise button
+        ) {
+            CameraButton(navController = navController)
+        }
+    }
+}
+
+@Composable
+fun CameraButton(navController: NavHostController) {
+    Box(
+        modifier = Modifier
+            .size(70.dp)
+            .background(colorResource(id = R.color.main_color), shape = CircleShape)
+            .clickable {
+                navController.navigate(TopLevelDestination.Scan.route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_camera),
+            contentDescription = "Camera Icon",
+            tint = Color.White,
+            modifier = Modifier.size(32.dp)
+        )
     }
 }
 
@@ -82,14 +136,22 @@ fun RowScope.AddItem(
     navController: NavHostController
 ) {
     NavigationBarItem(
-        label = {
-            Text(text = page.title)
-        },
         icon = {
-            Icon(
-                imageVector = page.icon,
-                contentDescription = "Navigation Icon"
-            )
+            page.icon?.let {
+                Icon(
+                    imageVector = it,
+                    modifier = Modifier.size(32.dp),
+                    contentDescription = "Navigation Icon"
+                )
+            }.also {
+                page.iconResId?.let {
+                    Icon(
+                        painter = painterResource(id = it),
+                        modifier = Modifier.size(32.dp),
+                        contentDescription = "Navigation Icon"
+                    )
+                }
+            }
         },
         selected = currentDestination?.hierarchy?.any {
             it.route == page.route
