@@ -39,7 +39,9 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(stringResource(R.string.dark_mode), style = MaterialTheme.typography.bodyLarge)
-                Text(stringResource(R.string.dark_mode_desc), style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
+                Text(
+                    stringResource(R.string.dark_mode_desc),
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
                 )
             }
             Switch(
@@ -57,7 +59,10 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(stringResource(R.string.language), style = MaterialTheme.typography.bodyLarge)
-                Text(stringResource(R.string.language_desc), style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray))
+                Text(
+                    stringResource(R.string.language_desc),
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
+                )
             }
             LanguageOption(
                 currentLanguage = selectedLanguage,

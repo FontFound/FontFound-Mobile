@@ -9,7 +9,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import com.android.fontfound.preferences.SettingsPreferences
+import com.android.fontfound.preferences.dataStore
 import com.android.fontfound.ui.MainScreen
+import com.android.fontfound.ui.history.HistoryViewModel
 import com.android.fontfound.ui.settings.SettingsViewModel
 import com.android.fontfound.ui.settings.updateLocale
 import com.android.fontfound.ui.theme.Theme
@@ -22,27 +25,34 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val viewModel: SettingsViewModel by viewModels()
-
-        viewModel.getLanguageSetting().observe(this) { language ->
-            val languageCode = when (language) {
-                "Indonesian" -> "id"
-                else -> "en"
-            }
-            if (Locale.getDefault().language != languageCode) {
-                updateLocale(this, languageCode)
-            }
-        }
+        val settingsPreferences = SettingsPreferences.getInstance(dataStore)
+        val isDarkMode = settingsPreferences.getInitialThemeSetting(this)
 
         setContent {
-            val isDarkMode = viewModel.getThemeSettings().observeAsState(initial = false)
+            val settingsViewModel: SettingsViewModel by viewModels()
+            val historyViewModel: HistoryViewModel by viewModels()
 
-            Theme(isDarkTheme = isDarkMode.value) {
+            settingsViewModel.getLanguageSetting().observe(this) { language ->
+                val languageCode = when (language) {
+                    "Indonesian" -> "id"
+                    else -> "en"
+                }
+                if (Locale.getDefault().language != languageCode) {
+                    updateLocale(this, languageCode)
+                }
+            }
+
+            val isDarkTheme = settingsViewModel.getThemeSettings().observeAsState(initial = isDarkMode)
+
+            Theme(isDarkTheme = isDarkTheme.value) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen(viewModel)
+                    MainScreen(
+                        settingsViewModel = settingsViewModel,
+                        historyViewModel = historyViewModel
+                    )
                 }
             }
         }

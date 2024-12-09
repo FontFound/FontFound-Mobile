@@ -8,7 +8,9 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
@@ -26,6 +28,12 @@ class SettingsPreferences private constructor(private val dataStore: DataStore<P
     suspend fun saveThemeSetting(isDarkModeActive: Boolean) {
         dataStore.edit { preferences ->
             preferences[themeKey] = isDarkModeActive
+        }
+    }
+
+    fun getInitialThemeSetting(context: Context): Boolean {
+        return runBlocking {
+            dataStore.data.firstOrNull()?.get(themeKey) ?: false
         }
     }
 

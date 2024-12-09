@@ -2,8 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp")
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
+    id("kotlin-parcelize")
 }
 
 android {
@@ -21,12 +23,16 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "BASE_URL", "\"https://event-api.dicoding.dev/\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "BASE_URL", "\"https://event-api.dicoding.dev/\"")
         }
     }
     compileOptions {
@@ -39,6 +45,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -68,8 +75,25 @@ dependencies {
     implementation(libs.androidx.compose.material3.material3)
     debugImplementation(libs.androidx.ui.tooling)
 
+    //Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
+
+    //Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.retrofit2.converter.gson)
+    implementation(libs.logging.interceptor)
+
+    //Glide
+    implementation(libs.glide)
+
+    //Coil
+    implementation(libs.coil.kt.coil.compose)
+
+    //Room
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
 }
 
 kapt {

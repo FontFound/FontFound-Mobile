@@ -21,10 +21,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.android.fontfound.navigation.Navigation
 import com.android.fontfound.navigation.TopLevelDestination
+import com.android.fontfound.ui.history.HistoryViewModel
 import com.android.fontfound.ui.settings.SettingsViewModel
 
 @Composable
-fun MainScreen(viewModel: SettingsViewModel) {
+fun MainScreen(settingsViewModel: SettingsViewModel, historyViewModel: HistoryViewModel) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -34,7 +35,8 @@ fun MainScreen(viewModel: SettingsViewModel) {
         Navigation(
             navController = navController,
             modifier = Modifier.padding(innerPadding),
-            settingsViewModel = viewModel
+            settingsViewModel = settingsViewModel,
+            historyViewModel = historyViewModel
         )
     }
 }
