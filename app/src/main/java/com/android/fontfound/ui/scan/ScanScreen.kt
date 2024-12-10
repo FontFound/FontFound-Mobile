@@ -54,11 +54,10 @@ import java.util.concurrent.Executors
 
 private var interpreter: InterpreterApi? = null
 private lateinit var fontRecognitionHelper: FontRecognitionHelper
-val currentBoxRect = mutableStateOf<Rect?>(null)
+val currentBoxRect = mutableStateOf<Rect?>(Rect(100,200,600,300))
 val currentFontName = mutableStateOf("")
-val currentConfidence = mutableStateOf(0f)
+val currentConfidence = mutableFloatStateOf(0f)
 private const val TAG = "ScanScreen"
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,6 +72,7 @@ fun ScanScreen(
     val previewView = remember { PreviewView(context) }
     var isFlashEnabled by remember { mutableStateOf(false) }
     var imageCapture: ImageCapture? = remember { null }
+    var isLoading by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -88,51 +88,51 @@ fun ScanScreen(
             launcher.launch(cameraPermission)
         }
 
+        isLoading = true
         downloadModel(
             context = context,
             onDownloadSuccess = {
-                Toast.makeText(context, "Model downloaded successfully", Toast.LENGTH_SHORT).show()
+                isLoading = false
+                fontRecognitionHelper = FontRecognitionHelper(context)
+                cameraProviderFuture.addListener({
+                    val cameraProvider = cameraProviderFuture.get()
+
+                    val preview = Preview.Builder().build().also {
+                        it.setSurfaceProvider(previewView.surfaceProvider)
+                    }
+
+                    imageCapture = ImageCapture.Builder().build()
+
+                    val imageAnalysis = ImageAnalysis.Builder()
+                        .setTargetResolution(Size(1280, 720))
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build()
+
+                    imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context)) { imageProxy ->
+                        processImage(imageProxy)
+                    }
+
+                    val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+                    try {
+                        cameraProvider.unbindAll()
+
+                        camera = cameraProvider.bindToLifecycle(
+                            lifecycleOwner,
+                            cameraSelector,
+                            preview,
+                            imageCapture,
+                            imageAnalysis
+                        )
+                    } catch (e: Exception) {
+                        Log.e("CameraX", "Failed to bind camera use cases", e)
+                    }
+                }, ContextCompat.getMainExecutor(context))
             },
             onError = { errorMessage ->
                 Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
             }
         )
-        fontRecognitionHelper = FontRecognitionHelper(context)
-
-        cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
-
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
-            }
-
-            imageCapture = ImageCapture.Builder().build()
-
-            val imageAnalysis = ImageAnalysis.Builder()
-                .setTargetResolution(Size(1280, 720))
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-
-            imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context)) { imageProxy ->
-                processImage(imageProxy)
-            }
-
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-            try {
-                cameraProvider.unbindAll()
-
-                camera = cameraProvider.bindToLifecycle(
-                    lifecycleOwner,
-                    cameraSelector,
-                    preview,
-                    imageCapture,
-                    imageAnalysis
-                )
-            } catch (e: Exception) {
-                Log.e("CameraX", "Failed to bind camera use cases", e)
-            }
-        }, ContextCompat.getMainExecutor(context))
     }
 
     DisposableEffect(Unit) {
@@ -198,16 +198,23 @@ fun ScanScreen(
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                Text("Downloading model...", Modifier.align(Alignment.CenterHorizontally))
+            }
         }
 
         // OverlayView
         OverlayView(
             boxRect = currentBoxRect.value,
             fontName = currentFontName.value,
-            confidence = currentConfidence.value
+            confidence = currentConfidence.floatValue
         )
     }
 }
+
 
 @Composable
 fun CaptureButton(imageCapture: ImageCapture?, context: Context) {
@@ -295,6 +302,7 @@ private fun downloadModel(
                 } else {
                     Log.d(TAG, "Model file not found locally, re-downloading...")
                     initializeInterpreter(model, onError)
+                    Toast.makeText(context, "Model downloaded successfully", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: IOException) {
                 onError("Failed to initialize interpreter: ${e.message}")
@@ -335,19 +343,17 @@ private fun initializeInterpreter(
 @SuppressLint("SetTextI18n")
 private fun processImage(image: ImageProxy) {
 
-    val bitmap = imageToBitmap(image)
-    val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 128, 128, true)
+    val croppedBitmap = cropBitmap(imageToBitmap(image), currentBoxRect.value)
+    val resizedBitmap = Bitmap.createScaledBitmap(croppedBitmap, 128, 128, true)
     val (fontName, confidence) = fontRecognitionHelper.classifyFont(resizedBitmap)
-    val detectionRect = Rect(100, 200, 400, 300)
 
-    currentBoxRect.value = detectionRect
     currentFontName.value = fontName
-    currentConfidence.value = confidence
+    currentConfidence.floatValue = confidence
 
     image.close()
 }
 
-// Convert ImageProxy to Bitmap
+
 private fun imageToBitmap(image: ImageProxy): Bitmap {
     val yBuffer = image.planes[0].buffer
     val uBuffer = image.planes[1].buffer
@@ -368,4 +374,13 @@ private fun imageToBitmap(image: ImageProxy): Bitmap {
     val imageBytes = outStream.toByteArray()
 
     return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+}
+
+// Crop a bitmap to the specified Rect
+private fun cropBitmap(bitmap: Bitmap, rect: Rect?): Bitmap {
+    return if (rect != null) {
+        Bitmap.createBitmap(bitmap, rect.left, rect.top, rect.width(), rect.height())
+    } else {
+        bitmap
+    }
 }
