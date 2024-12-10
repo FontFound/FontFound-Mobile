@@ -80,14 +80,14 @@ fun BottomBar(navController: NavHostController) {
         // Navigation Bar Background
         NavigationBar {
             pages.forEachIndexed { index, page ->
-                if (index != 1) { // Skip the middle button
+                if (index != 1) {
                     AddItem(
                         page = page,
                         currentDestination = currentDestination,
                         navController = navController
                     )
                 } else {
-                    Spacer(modifier = Modifier.weight(1f)) // Leave space for middle button
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }
@@ -96,7 +96,7 @@ fun BottomBar(navController: NavHostController) {
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .offset(y = -30.dp) // Raise button
+                .offset(y = -30.dp)
         ) {
             CameraButton(navController = navController)
         }

@@ -1,11 +1,21 @@
+@file:Suppress("DEPRECATION")
+
 package com.android.fontfound.ui.scan
 
+import OverlayView
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageFormat
+import android.graphics.Rect
+import android.graphics.YuvImage
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
+import android.util.Size
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,23 +46,30 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.tensorflow.lite.InterpreterApi
 import org.tensorflow.lite.gpu.GpuDelegateFactory
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Executors
 
 
 private var interpreter: InterpreterApi? = null
+private lateinit var fontRecognitionHelper: FontRecognitionHelper
+val currentBoxRect = mutableStateOf<Rect?>(null)
+val currentFontName = mutableStateOf("")
+val currentConfidence = mutableStateOf(0f)
 private const val TAG = "ScanScreen"
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScanScreen(navController: NavHostController) {
+fun ScanScreen(
+    navController: NavHostController
+) {
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
     val cameraPermission = Manifest.permission.CAMERA
-    val camera: Camera? by remember { mutableStateOf(null) }
+    var camera: Camera? by remember { mutableStateOf(null) }
     val previewView = remember { PreviewView(context) }
     var isFlashEnabled by remember { mutableStateOf(false) }
     var imageCapture: ImageCapture? = remember { null }
@@ -67,32 +84,10 @@ fun ScanScreen(navController: NavHostController) {
     )
 
     LaunchedEffect(Unit) {
-        // Request camera permission
         if (ContextCompat.checkSelfPermission(context, cameraPermission) != PackageManager.PERMISSION_GRANTED) {
             launcher.launch(cameraPermission)
         }
 
-        // Initialize CameraX
-        cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
-            }
-            imageCapture = ImageCapture.Builder().build()
-
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-            try {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    lifecycleOwner, cameraSelector, preview, imageCapture
-                )
-            } catch (e: Exception) {
-                Log.e("CameraX", "Failed to bind camera use cases", e)
-            }
-        }, ContextCompat.getMainExecutor(context))
-
-        // Download the Firebase model
         downloadModel(
             context = context,
             onDownloadSuccess = {
@@ -102,6 +97,42 @@ fun ScanScreen(navController: NavHostController) {
                 Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
             }
         )
+        fontRecognitionHelper = FontRecognitionHelper(context)
+
+        cameraProviderFuture.addListener({
+            val cameraProvider = cameraProviderFuture.get()
+
+            val preview = Preview.Builder().build().also {
+                it.setSurfaceProvider(previewView.surfaceProvider)
+            }
+
+            imageCapture = ImageCapture.Builder().build()
+
+            val imageAnalysis = ImageAnalysis.Builder()
+                .setTargetResolution(Size(1280, 720))
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+
+            imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context)) { imageProxy ->
+                processImage(imageProxy)
+            }
+
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+            try {
+                cameraProvider.unbindAll()
+
+                camera = cameraProvider.bindToLifecycle(
+                    lifecycleOwner,
+                    cameraSelector,
+                    preview,
+                    imageCapture,
+                    imageAnalysis
+                )
+            } catch (e: Exception) {
+                Log.e("CameraX", "Failed to bind camera use cases", e)
+            }
+        }, ContextCompat.getMainExecutor(context))
     }
 
     DisposableEffect(Unit) {
@@ -110,62 +141,71 @@ fun ScanScreen(navController: NavHostController) {
         }
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        TopAppBar(
-            title = { Text(text = "Scan Font") },
-            navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        // ScanScreen content
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            TopAppBar(
+                title = { Text(text = "Scan Font") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrow_back),
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+            )
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .background(Color.Red)
+            ) {
+                AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Spacer(modifier = Modifier.weight(2f))
+
+                CaptureButton(imageCapture, context)
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                IconButton(
+                    onClick = {
+                        isFlashEnabled = !isFlashEnabled
+                        camera?.cameraControl?.enableTorch(isFlashEnabled)
+                    },
+                    modifier = Modifier.padding(end = 16.dp)
+                ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_arrow_back),
-                        contentDescription = "Back"
+                        painter = if (isFlashEnabled) painterResource(R.drawable.ic_flash_on) else painterResource(R.drawable.ic_flash_off),
+                        contentDescription = "Toggle Flash",
+                        tint = if (isFlashEnabled) Color.Blue else Color.Black
                     )
                 }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-        )
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .background(Color.Red)
-        ) {
-            AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Spacer(modifier = Modifier.weight(2f))
-
-            CaptureButton(imageCapture, context)
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            IconButton(
-                onClick = {
-                    isFlashEnabled = !isFlashEnabled
-                    camera?.cameraControl?.enableTorch(isFlashEnabled)
-                },
-                modifier = Modifier.padding(end = 16.dp)
-            ) {
-                Icon(
-                    painter = if (isFlashEnabled) painterResource(R.drawable.ic_flash_on) else painterResource(R.drawable.ic_flash_off),
-                    contentDescription = "Toggle Flash",
-                    tint = if (isFlashEnabled) Color.Blue else Color.Black
-                )
             }
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // OverlayView
+        OverlayView(
+            boxRect = currentBoxRect.value,
+            fontName = currentFontName.value,
+            confidence = currentConfidence.value
+        )
     }
 }
 
@@ -236,7 +276,7 @@ fun saveLocally(photoFile: File) {
 @Synchronized
 private fun downloadModel(
     context: Context,
-    onDownloadSuccess: () -> Unit,
+    onDownloadSuccess: (String) -> Unit,
     onError: (String) -> Unit
 ) {
     val conditions = CustomModelDownloadConditions.Builder()
@@ -247,13 +287,14 @@ private fun downloadModel(
         .getModel("font-found", DownloadType.LOCAL_MODEL, conditions)
         .addOnSuccessListener { model: CustomModel ->
             try {
-                // Periksa apakah model sudah tersedia
+                // check if model already exists locally
                 if (model.file != null && model.file!!.exists()) {
                     Log.d(TAG, "Model already exists locally at: ${model.file!!.absolutePath}")
+                    val newModelPath = copyModelToInternalStorage(context, model.file!!)
+                    onDownloadSuccess(newModelPath)
                 } else {
                     Log.d(TAG, "Model file not found locally, re-downloading...")
                     initializeInterpreter(model, onError)
-                    onDownloadSuccess()
                 }
             } catch (e: IOException) {
                 onError("Failed to initialize interpreter: ${e.message}")
@@ -264,6 +305,13 @@ private fun downloadModel(
             Log.e(TAG, "Failed to download model: ${e.message}")
         }
 }
+
+private fun copyModelToInternalStorage(context: Context, modelFile: File): String {
+    val targetFile = File(context.filesDir, "font_found.tflite")
+    modelFile.copyTo(targetFile, overwrite = true)
+    return targetFile.absolutePath
+}
+
 
 
 private fun initializeInterpreter(
@@ -282,4 +330,42 @@ private fun initializeInterpreter(
         onError(e.message.toString())
         Log.e(TAG, e.message.toString())
     }
+}
+
+@SuppressLint("SetTextI18n")
+private fun processImage(image: ImageProxy) {
+
+    val bitmap = imageToBitmap(image)
+    val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 128, 128, true)
+    val (fontName, confidence) = fontRecognitionHelper.classifyFont(resizedBitmap)
+    val detectionRect = Rect(100, 200, 400, 300)
+
+    currentBoxRect.value = detectionRect
+    currentFontName.value = fontName
+    currentConfidence.value = confidence
+
+    image.close()
+}
+
+// Convert ImageProxy to Bitmap
+private fun imageToBitmap(image: ImageProxy): Bitmap {
+    val yBuffer = image.planes[0].buffer
+    val uBuffer = image.planes[1].buffer
+    val vBuffer = image.planes[2].buffer
+
+    val ySize = yBuffer.remaining()
+    val uSize = uBuffer.remaining()
+    val vSize = vBuffer.remaining()
+
+    val nv21 = ByteArray(ySize + uSize + vSize)
+    yBuffer.get(nv21, 0, ySize)
+    uBuffer.get(nv21, ySize, uSize)
+    vBuffer.get(nv21, ySize + uSize, vSize)
+
+    val yuvImage = YuvImage(nv21, ImageFormat.NV21, image.width, image.height, null)
+    val outStream = ByteArrayOutputStream()
+    yuvImage.compressToJpeg(Rect(0, 0, image.width, image.height), 100, outStream)
+    val imageBytes = outStream.toByteArray()
+
+    return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
 }
