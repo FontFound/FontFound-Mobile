@@ -6,6 +6,7 @@ plugins {
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
     id("kotlin-parcelize")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -75,7 +76,6 @@ dependencies {
     implementation(libs.androidx.compose.material3.material3)
     debugImplementation(libs.androidx.ui.tooling)
 
-    //Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
 
@@ -87,15 +87,16 @@ dependencies {
     //Glide
     implementation(libs.glide)
 
-    //Coil
-    implementation(libs.coil.kt.coil.compose)
+    implementation ("androidx.camera:camera-camera2:1.4.0")
+    implementation ("androidx.camera:camera-lifecycle:1.4.0")
+    implementation ("androidx.camera:camera-view:1.4.0")
+    implementation ("androidx.camera:camera-extensions:1.4.0")
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.7.5")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.7.5")
 
-    //Room
-    implementation(libs.androidx.room.ktx)
-    implementation(libs.androidx.room.runtime)
-    ksp(libs.androidx.room.compiler)
-}
-
-kapt {
-    correctErrorTypes = true
+    implementation("com.google.android.gms:play-services-tflite-java:16.3.0")
+    implementation("com.google.android.gms:play-services-tflite-gpu:16.3.0")
+    implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
+    implementation("com.google.firebase:firebase-ml-modeldownloader:25.0.1")
+    implementation("com.google.firebase:firebase-analytics")
 }

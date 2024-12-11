@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "35444308386",
+    "project_id": "project-fontfound",
+    "storage_bucket": "project-fontfound.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:35444308386:android:1e3c78589ef89161611afb",
+        "android_client_info": {
+          "package_name": "com.android.fontfound"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCT0jYivXMVKArwToFGVHtvP91Jwprrzj8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,48 @@
+Agency
+Akzidenz Grotesk
+Algerian
+Arial
+Baskerville
+Bell MT
+Bembo
+Bodoni
+Book Antiqua
+Brandish
+Calibry
+Californian FB
+Calligraphy
+Calvin
+Cambria
+Candara
+Century
+Comic Sans MS
+Consolas
+Corbel
+Courier
+Didot
+Elephant
+Fascinate
+Franklin Gothic
+Frutiger
+Futura
+Garamond
+Georgia
+Gill sans
+Helvetica
+Hombre
+LCD Mono
+Lucida Bright
+Minion
+Monotype Corsiva
+Mrs Eaves
+Myriad
+Nasalization
+News Gothic
+Palatino linotype
+Perpetua
+Rockwell
+Sabon
+Snowdrift Regular
+Steppes TT
+Times New Roman
+Verdana
