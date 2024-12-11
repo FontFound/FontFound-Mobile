@@ -87,6 +87,15 @@ dependencies {
     //Glide
     implementation(libs.glide)
 
+    //Coil
+    implementation(libs.coil.kt.coil.compose)
+
+    //Room
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+
+    // camera
     implementation ("androidx.camera:camera-camera2:1.4.0")
     implementation ("androidx.camera:camera-lifecycle:1.4.0")
     implementation ("androidx.camera:camera-view:1.4.0")
@@ -94,6 +103,15 @@ dependencies {
     implementation ("androidx.compose.ui:ui-tooling-preview:1.7.5")
     implementation ("androidx.compose.runtime:runtime-livedata:1.7.5")
 
+    //tensorflow lite
+    implementation("org.tensorflow:tensorflow-lite:2.13.0")
+    implementation("org.tensorflow:tensorflow-lite-metadata:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite-task-vision-play-services:0.4.4")
+    implementation("com.google.android.gms:play-services-tflite-support:16.3.0")
+    implementation("com.google.android.gms:play-services-tflite-gpu:16.3.0")
+    implementation("org.tensorflow:tensorflow-lite-gpu:2.13.0")
+
+    //firebase
     implementation("com.google.android.gms:play-services-tflite-java:16.3.0")
     implementation("com.google.android.gms:play-services-tflite-gpu:16.3.0")
     implementation(platform("com.google.firebase:firebase-bom:33.6.0"))

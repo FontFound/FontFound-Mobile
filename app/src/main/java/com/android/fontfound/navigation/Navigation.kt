@@ -15,7 +15,7 @@ import com.android.fontfound.ui.settings.SettingsViewModel
 fun Navigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    onShowBottomBar: (Boolean) -> Unit
+    onShowBottomBar: (Boolean) -> Unit,
     settingsViewModel: SettingsViewModel,
     historyViewModel : HistoryViewModel
 ) {

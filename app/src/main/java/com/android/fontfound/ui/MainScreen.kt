@@ -27,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -57,8 +56,8 @@ fun MainScreen(settingsViewModel: SettingsViewModel, historyViewModel: HistoryVi
     Scaffold(
         bottomBar = {
             if(showBottomBar) BottomBar(navController = navController)
+        },
             containerColor = MaterialTheme.colorScheme.background
-        }
     ) { innerPadding ->
         Navigation(
             navController = navController,
