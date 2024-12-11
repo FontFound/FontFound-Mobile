@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -37,10 +38,11 @@ import androidx.navigation.compose.rememberNavController
 import com.android.fontfound.R
 import com.android.fontfound.navigation.Navigation
 import com.android.fontfound.navigation.TopLevelDestination
+import com.android.fontfound.ui.history.HistoryViewModel
+import com.android.fontfound.ui.settings.SettingsViewModel
 
 @Composable
-@Preview
-fun MainScreen() {
+fun MainScreen(settingsViewModel: SettingsViewModel, historyViewModel: HistoryViewModel) {
     val navController = rememberNavController()
     var showBottomBar by remember { mutableStateOf(true) }
 
@@ -55,11 +57,14 @@ fun MainScreen() {
     Scaffold(
         bottomBar = {
             if(showBottomBar) BottomBar(navController = navController)
+            containerColor = MaterialTheme.colorScheme.background
         }
     ) { innerPadding ->
         Navigation(
             navController = navController,
             modifier = Modifier.padding(innerPadding),
+            settingsViewModel = settingsViewModel,
+            historyViewModel = historyViewModel,
             onShowBottomBar = { showBottomBar = it }
         )
     }

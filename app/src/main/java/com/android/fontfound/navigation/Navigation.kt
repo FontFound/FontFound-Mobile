@@ -6,14 +6,18 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.android.fontfound.ui.history.HistoryScreen
+import com.android.fontfound.ui.history.HistoryViewModel
 import com.android.fontfound.ui.scan.ScanScreen
 import com.android.fontfound.ui.settings.SettingsScreen
+import com.android.fontfound.ui.settings.SettingsViewModel
 
 @Composable
 fun Navigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     onShowBottomBar: (Boolean) -> Unit
+    settingsViewModel: SettingsViewModel,
+    historyViewModel : HistoryViewModel
 ) {
     NavHost(
         navController = navController,
@@ -22,7 +26,7 @@ fun Navigation(
     ) {
         composable(TopLevelDestination.History.route) {
             onShowBottomBar(true)
-            HistoryScreen()
+            HistoryScreen(viewModel = historyViewModel)
         }
         composable(TopLevelDestination.Scan.route) {
             onShowBottomBar(false)
@@ -30,7 +34,7 @@ fun Navigation(
         }
         composable(TopLevelDestination.Settings.route) {
             onShowBottomBar(true)
-            SettingsScreen()
+            SettingsScreen(viewModel = settingsViewModel)
         }
     }
 }
