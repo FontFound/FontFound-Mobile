@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -57,6 +56,8 @@ private lateinit var fontRecognitionHelper: FontRecognitionHelper
 val currentBoxRect = mutableStateOf<Rect?>(Rect(100,200,600,300))
 val currentFontName = mutableStateOf("")
 val currentConfidence = mutableFloatStateOf(0f)
+var toastShown =  mutableStateOf(false)
+val isFreezing =  mutableStateOf(false)
 private const val TAG = "ScanScreen"
 
 @SuppressLint("HardwareIds")
@@ -86,6 +87,14 @@ fun ScanScreen(
             }
         }
     )
+
+    if (isFreezing.value) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+        )
+    }
 
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, cameraPermission) != PackageManager.PERMISSION_GRANTED) {
@@ -147,7 +156,6 @@ fun ScanScreen(
     }
 
     val deviceId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
-    var toastShown by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // ScanScreen content
@@ -220,15 +228,15 @@ fun ScanScreen(
 
         when (uploadResult) {
             is Result.Success -> {
-                if (!toastShown) {
+                if (!toastShown.value) {
                     Toast.makeText(context, "Upload successful: ${(uploadResult as Result.Success).data}", Toast.LENGTH_SHORT).show()
-                    toastShown = true
+                    toastShown.value = true
                 }
             }
             is Result.Error -> {
-                if (!toastShown) {
+                if (!toastShown.value) {
                     Toast.makeText(context, "Error: ${(uploadResult as Result.Error).error}", Toast.LENGTH_SHORT).show()
-                    toastShown = true
+                    toastShown.value = true
                 }
             }
             null -> {
@@ -254,6 +262,8 @@ fun CaptureButton(
     val cameraExecutor = Executors.newSingleThreadExecutor()
     Button(
         onClick = {
+            isFreezing.value = true
+
             val photoFile = File(
                 context.externalCacheDir,
                 "${System.currentTimeMillis()}.jpg"
@@ -273,23 +283,25 @@ fun CaptureButton(
                             result = "Font: ${currentFontName.value}, Confidence: ${currentConfidence.floatValue * 100}%",
                             deviceId = safeDeviceId
                         )
+                        isFreezing.value = false
                     }
                     override fun onError(exception: ImageCaptureException) {
                         Toast.makeText(context, "Failed to capture image: ${exception.message}", Toast.LENGTH_SHORT).show()
+                        isFreezing.value = false
                     }
                 }
             )
-        }
+        },
+        modifier = Modifier.background(if (isFreezing.value) Color.Gray else Color.Transparent)
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_capture),
             contentDescription = "Capture",
-            tint = Color.White
+            tint = Color.White,
+            modifier = Modifier.size(36.dp)
         )
     }
-
 }
-
 
 fun isConnectedToInternet(context: Context): Boolean {
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
