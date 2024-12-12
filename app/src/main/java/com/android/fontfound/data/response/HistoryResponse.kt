@@ -2,59 +2,35 @@ package com.android.fontfound.data.response
 
 import com.google.gson.annotations.SerializedName
 
-data class EventResponse(
+data class HistoryResponse(
 
-    @field:SerializedName("listEvents")
-    val listEvents: List<ListEventsItem> = listOf(),
+	@field:SerializedName("data")
+	val data: List<DataItem?>? = null,
 
-    @field:SerializedName("error")
-    val error: Boolean,
+	@field:SerializedName("message")
+	val message: String? = null,
 
-    @field:SerializedName("message")
-    val message: String
+	@field:SerializedName("status")
+	val status: Int? = null
 )
 
-data class ListEventsItem(
+data class DataItem(
 
-    @field:SerializedName("summary")
-    val summary: String,
+	@field:SerializedName("result")
+	val result: String? = null,
 
-    @field:SerializedName("mediaCover")
-    val mediaCover: String,
+	@field:SerializedName("createdAt")
+	val createdAt: String? = null,
 
-    @field:SerializedName("registrants")
-    val registrants: Int,
+	@field:SerializedName("device_id")
+	val deviceId: String? = null,
 
-    @field:SerializedName("imageLogo")
-    val imageLogo: String,
+	@field:SerializedName("image_url")
+	val imageUrl: String? = null,
 
-    @field:SerializedName("link")
-    val link: String,
+	@field:SerializedName("id")
+	val id: Int? = null,
 
-    @field:SerializedName("description")
-    val description: String,
-
-    @field:SerializedName("ownerName")
-    val ownerName: String,
-
-    @field:SerializedName("cityName")
-    val cityName: String,
-
-    @field:SerializedName("quota")
-    val quota: Int,
-
-    @field:SerializedName("name")
-    val name: String,
-
-    @field:SerializedName("id")
-    val id: Int,
-
-    @field:SerializedName("beginTime")
-    val beginTime: String,
-
-    @field:SerializedName("endTime")
-    val endTime: String,
-
-    @field:SerializedName("category")
-    val category: String
+	@field:SerializedName("updatedAt")
+	val updatedAt: String? = null
 )

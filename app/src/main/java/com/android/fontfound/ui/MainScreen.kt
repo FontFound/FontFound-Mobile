@@ -38,10 +38,11 @@ import com.android.fontfound.R
 import com.android.fontfound.navigation.Navigation
 import com.android.fontfound.navigation.TopLevelDestination
 import com.android.fontfound.ui.history.HistoryViewModel
+import com.android.fontfound.ui.scan.ScanViewModel
 import com.android.fontfound.ui.settings.SettingsViewModel
 
 @Composable
-fun MainScreen(settingsViewModel: SettingsViewModel, historyViewModel: HistoryViewModel) {
+fun MainScreen(settingsViewModel: SettingsViewModel, historyViewModel: HistoryViewModel, scanViewModel: ScanViewModel) {
     val navController = rememberNavController()
     var showBottomBar by remember { mutableStateOf(true) }
 
@@ -64,6 +65,7 @@ fun MainScreen(settingsViewModel: SettingsViewModel, historyViewModel: HistoryVi
             modifier = Modifier.padding(innerPadding),
             settingsViewModel = settingsViewModel,
             historyViewModel = historyViewModel,
+            scanViewModel = scanViewModel,
             onShowBottomBar = { showBottomBar = it }
         )
     }
@@ -100,7 +102,7 @@ fun BottomBar(navController: NavHostController) {
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .offset(y = -30.dp)
+                .offset(y = (-30).dp)
         ) {
             CameraButton(navController = navController)
         }

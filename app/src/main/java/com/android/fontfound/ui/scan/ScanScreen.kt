@@ -14,6 +14,7 @@ import android.graphics.Rect
 import android.graphics.YuvImage
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.provider.Settings
 import android.util.Log
 import android.util.Size
 import android.widget.Toast
@@ -26,11 +27,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -49,8 +52,11 @@ import org.tensorflow.lite.gpu.GpuDelegateFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.Executors
-
+import com.android.fontfound.data.util.Result
 
 private var interpreter: InterpreterApi? = null
 private lateinit var fontRecognitionHelper: FontRecognitionHelper
@@ -59,10 +65,12 @@ val currentFontName = mutableStateOf("")
 val currentConfidence = mutableFloatStateOf(0f)
 private const val TAG = "ScanScreen"
 
+@SuppressLint("HardwareIds")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScanScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    scanViewModel: ScanViewModel
 ) {
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -73,6 +81,8 @@ fun ScanScreen(
     var isFlashEnabled by remember { mutableStateOf(false) }
     var imageCapture: ImageCapture? = remember { null }
     var isLoading by remember { mutableStateOf(false) }
+
+    val uploadResult by scanViewModel.uploadResult.observeAsState()
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -141,6 +151,8 @@ fun ScanScreen(
         }
     }
 
+    val deviceId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+
     Box(modifier = Modifier.fillMaxSize()) {
         // ScanScreen content
         Column(
@@ -179,7 +191,12 @@ fun ScanScreen(
             ) {
                 Spacer(modifier = Modifier.weight(2f))
 
-                CaptureButton(imageCapture, context)
+                CaptureButton(
+                    imageCapture = imageCapture,
+                    context = context,
+                    scanViewModel = scanViewModel,
+                    deviceId = deviceId ?: "UnknownDevice"
+                )
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -206,6 +223,51 @@ fun ScanScreen(
             }
         }
 
+        when (uploadResult) {
+            is Result.Success -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Upload successful: ${(uploadResult as Result.Success).data}",
+                        color = Color.Green,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+            is Result.Error -> {
+                if ((uploadResult as Result.Error).error == "Loading") {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator()
+                        Text("Uploading...", textAlign = TextAlign.Center)
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Error: ${(uploadResult as Result.Error).error}",
+                            color = Color.Red,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+            null -> {
+            }
+        }
+
         // OverlayView
         OverlayView(
             boxRect = currentBoxRect.value,
@@ -215,9 +277,13 @@ fun ScanScreen(
     }
 }
 
-
 @Composable
-fun CaptureButton(imageCapture: ImageCapture?, context: Context) {
+fun CaptureButton(
+    imageCapture: ImageCapture?,
+    context: Context,
+    scanViewModel: ScanViewModel,
+    deviceId: String
+) {
     val cameraExecutor = Executors.newSingleThreadExecutor()
 
     Button(
@@ -233,13 +299,24 @@ fun CaptureButton(imageCapture: ImageCapture?, context: Context) {
                 cameraExecutor,
                 object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                        Toast.makeText(context, "Image saved at ${photoFile.absolutePath}", Toast.LENGTH_SHORT).show()
-                        Log.d("CameraX", "Image saved at ${photoFile.absolutePath}")
+                        val currentTimestamp = SimpleDateFormat(
+                            "yyyy-MM-dd'T'HH:mm:ss",
+                            Locale.getDefault()
+                        ).format(Date())
+
+                        val safeDeviceId = deviceId.ifBlank { "UnknownDevice" }
+
+                        scanViewModel.uploadHistory(
+                            imageFile = photoFile,
+                            createdAt = currentTimestamp,
+                            updatedAt = currentTimestamp,
+                            result = "Font: ${currentFontName.value}, Confidence: ${currentConfidence.floatValue}",
+                            deviceId = safeDeviceId
+                        )
                     }
 
                     override fun onError(exception: ImageCaptureException) {
                         Toast.makeText(context, "Failed to capture image: ${exception.message}", Toast.LENGTH_SHORT).show()
-                        Log.e("CameraX", "Failed to capture image", exception)
                     }
                 }
             )
@@ -384,3 +461,4 @@ private fun cropBitmap(bitmap: Bitmap, rect: Rect?): Bitmap {
         bitmap
     }
 }
+

@@ -13,6 +13,7 @@ import com.android.fontfound.preferences.SettingsPreferences
 import com.android.fontfound.preferences.dataStore
 import com.android.fontfound.ui.MainScreen
 import com.android.fontfound.ui.history.HistoryViewModel
+import com.android.fontfound.ui.scan.ScanViewModel
 import com.android.fontfound.ui.settings.SettingsViewModel
 import com.android.fontfound.ui.settings.updateLocale
 import com.android.fontfound.ui.theme.Theme
@@ -31,6 +32,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settingsViewModel: SettingsViewModel by viewModels()
             val historyViewModel: HistoryViewModel by viewModels()
+            val scanViewModel: ScanViewModel by viewModels()
 
             settingsViewModel.getLanguageSetting().observe(this) { language ->
                 val languageCode = when (language) {
@@ -51,7 +53,8 @@ class MainActivity : ComponentActivity() {
                 ) {
                     MainScreen(
                         settingsViewModel = settingsViewModel,
-                        historyViewModel = historyViewModel
+                        historyViewModel = historyViewModel,
+                        scanViewModel = scanViewModel,
                     )
                 }
             }

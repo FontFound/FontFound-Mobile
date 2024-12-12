@@ -5,23 +5,21 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.fontfound.data.repository.HistoryRepository
-import com.android.fontfound.data.response.ListEventsItem
+import com.android.fontfound.data.response.DataItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.android.fontfound.data.util.Result
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val historyRepository: HistoryRepository
 ) : ViewModel() {
 
-    private val _listEvents = MutableLiveData<List<ListEventsItem>>(emptyList())
-    val listEvents: LiveData<List<ListEventsItem>> = _listEvents
+    private val _listHistory = MutableLiveData<List<DataItem>>(emptyList())
+    val listHistory: LiveData<List<DataItem>> = _listHistory
 
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
@@ -30,20 +28,20 @@ class HistoryViewModel @Inject constructor(
     val errorMessage = _errorMessage.asSharedFlow()
 
     init {
-        fetchFinishedEvents()
+        fetchHistory()
     }
 
-    private fun fetchFinishedEvents() = viewModelScope.launch {
+    private fun fetchHistory() = viewModelScope.launch {
         _isLoading.value = true
-        val result = historyRepository.fetchFinishedEvents()
+        val result = historyRepository.fetchHistory()
         _isLoading.value = false
         when (result) {
             is Result.Success -> {
-                _listEvents.value = result.data
+                _listHistory.value = result.data
             }
 
             is Result.Error -> {
-                _errorMessage.emit("Failed to load event data")
+                _errorMessage.emit("Failed to load history data")
             }
         }
     }

@@ -25,7 +25,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "BASE_URL", "\"https://event-api.dicoding.dev/\"")
+            buildConfigField("String", "BASE_URL", "\"https://api-backend-md-201098739954.asia-southeast2.run.app/\"")
         }
         release {
             isMinifyEnabled = false
@@ -33,7 +33,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "BASE_URL", "\"https://event-api.dicoding.dev/\"")
+            buildConfigField("String", "BASE_URL", "\"https://api-backend-md-201098739954.asia-southeast2.run.app/\"")
         }
     }
     compileOptions {
@@ -117,4 +117,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
     implementation("com.google.firebase:firebase-ml-modeldownloader:25.0.1")
     implementation("com.google.firebase:firebase-analytics")
+}
+
+kapt {
+    correctErrorTypes = true
 }
