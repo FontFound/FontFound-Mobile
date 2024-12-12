@@ -147,6 +147,7 @@ fun ScanScreen(
     }
 
     val deviceId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+    var toastShown by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // ScanScreen content
@@ -219,43 +220,15 @@ fun ScanScreen(
 
         when (uploadResult) {
             is Result.Success -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Upload successful: ${(uploadResult as Result.Success).data}",
-                        color = Color.Green,
-                        textAlign = TextAlign.Center
-                    )
+                if (!toastShown) {
+                    Toast.makeText(context, "Upload successful: ${(uploadResult as Result.Success).data}", Toast.LENGTH_SHORT).show()
+                    toastShown = true
                 }
             }
             is Result.Error -> {
-                if ((uploadResult as Result.Error).error == "Loading") {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CircularProgressIndicator()
-                        Text("Uploading...", textAlign = TextAlign.Center)
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Error: ${(uploadResult as Result.Error).error}",
-                            color = Color.Red,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                if (!toastShown) {
+                    Toast.makeText(context, "Error: ${(uploadResult as Result.Error).error}", Toast.LENGTH_SHORT).show()
+                    toastShown = true
                 }
             }
             null -> {
@@ -292,7 +265,6 @@ fun CaptureButton(
                 cameraExecutor,
                 object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-
                         val resizedImage = reduceFileImage(photoFile)
                         val safeDeviceId = deviceId.ifBlank { "UnknownDevice" }
 
@@ -302,7 +274,6 @@ fun CaptureButton(
                             deviceId = safeDeviceId
                         )
                     }
-
                     override fun onError(exception: ImageCaptureException) {
                         Toast.makeText(context, "Failed to capture image: ${exception.message}", Toast.LENGTH_SHORT).show()
                     }
@@ -316,7 +287,9 @@ fun CaptureButton(
             tint = Color.White
         )
     }
+
 }
+
 
 fun isConnectedToInternet(context: Context): Boolean {
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

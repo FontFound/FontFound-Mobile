@@ -1,5 +1,6 @@
 package com.android.fontfound.data.repository
 
+import android.widget.Toast
 import com.android.fontfound.data.retrofit.ApiService
 import com.android.fontfound.data.util.Result
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -37,7 +38,7 @@ class ScanRepository @Inject constructor(
 
             if (response.isSuccessful && response.body() != null) {
                 val responseBody = response.body()!!
-                if (responseBody.status == 200) {
+                if (responseBody.status == 201) {
                     Result.Success(responseBody.message ?: "Upload successful")
                 } else {
                     Result.Error(responseBody.message ?: "Server error occurred")

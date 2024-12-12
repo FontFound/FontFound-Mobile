@@ -22,7 +22,7 @@ class ScanViewModel @Inject constructor(
     fun uploadHistory(
         imageFile: File,
         result: String,
-        deviceId: String,
+        deviceId: String
     ) {
         viewModelScope.launch {
             try {
