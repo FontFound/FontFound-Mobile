@@ -14,7 +14,7 @@ interface ApiService {
 
     @GET("records")
     suspend fun getHistory(
-    ): Response<HistoryResponse>
+    ): HistoryResponse
 
     @GET("records/{device-id}")
     suspend fun getHistoryByDevice(

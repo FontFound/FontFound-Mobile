@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.navigation.NavHostController
 import com.android.fontfound.R
 import com.google.firebase.ml.modeldownloader.CustomModel
@@ -285,6 +286,12 @@ fun CaptureButton(
                 context.externalCacheDir,
                 "${System.currentTimeMillis()}.jpg"
             )
+            val photoUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                photoFile
+            )
+
             val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
             imageCapture?.takePicture(
@@ -301,6 +308,8 @@ fun CaptureButton(
                             result = "Font: ${currentFontName.value}, Confidence: ${currentConfidence.floatValue * 100}%",
                             deviceId = safeDeviceId
                         )
+
+                        Toast.makeText(context, "Image captured successfully!", Toast.LENGTH_SHORT).show()
                     }
 
                     override fun onError(exception: ImageCaptureException) {

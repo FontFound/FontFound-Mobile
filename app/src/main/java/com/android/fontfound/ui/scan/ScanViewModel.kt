@@ -1,5 +1,7 @@
 package com.android.fontfound.ui.scan
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -7,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.android.fontfound.data.repository.ScanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import java.io.File
 import javax.inject.Inject
 import com.android.fontfound.data.util.Result
 
@@ -22,14 +23,16 @@ class ScanViewModel @Inject constructor(
     fun uploadHistory(
         imageFile: File,
         result: String,
-        deviceId: String
+        deviceId: String,
+        context: Context
     ) {
         viewModelScope.launch {
             try {
                 _uploadResult.value = scanRepository.uploadHistory(
                     imageFile = imageFile,
                     result = result,
-                    deviceId = deviceId
+                    deviceId = deviceId,
+                    context = context
                 )
             } catch (e: Exception) {
                 _uploadResult.value = Result.Error("Unexpected error: ${e.message}")
