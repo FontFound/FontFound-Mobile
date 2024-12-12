@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.navigation.NavHostController
 import com.android.fontfound.R
 import com.google.firebase.ml.modeldownloader.CustomModel
@@ -292,6 +293,12 @@ fun CaptureButton(
                 context.externalCacheDir,
                 "${System.currentTimeMillis()}.jpg"
             )
+            val photoUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                photoFile
+            )
+
             val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
             imageCapture?.takePicture(
@@ -307,12 +314,15 @@ fun CaptureButton(
                         val safeDeviceId = deviceId.ifBlank { "UnknownDevice" }
 
                         scanViewModel.uploadHistory(
-                            imageFile = photoFile,
+                            imageUri = photoUri,
                             createdAt = currentTimestamp,
                             updatedAt = currentTimestamp,
                             result = "Font: ${currentFontName.value}, Confidence: ${currentConfidence.floatValue}",
-                            deviceId = safeDeviceId
+                            deviceId = safeDeviceId,
+                            context = context
                         )
+
+                        Toast.makeText(context, "Image captured successfully!", Toast.LENGTH_SHORT).show()
                     }
 
                     override fun onError(exception: ImageCaptureException) {
@@ -330,32 +340,32 @@ fun CaptureButton(
     }
 }
 
-fun isConnectedToInternet(context: Context): Boolean {
-    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    val network = connectivityManager.activeNetwork ?: return false
-    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-}
-
-fun uploadToCloud(photoFile: File, deviceId: String) {
-    val client = OkHttpClient()
-    val requestBody = MultipartBody.Builder()
-        .setType(MultipartBody.FORM)
-        .addFormDataPart("photo", photoFile.name, photoFile.asRequestBody())
-        .addFormDataPart("ID_DEVICE", deviceId)
-        .build()
-
-    val request = Request.Builder()
-        .url("http://localhost:8080/api")
-        .post(requestBody)
-        .build()
-
-    client.newCall(request).execute()
-}
-
-fun saveLocally(photoFile: File) {
-    Log.d("CameraX", "Saved locally: ${photoFile.path}")
-}
+//fun isConnectedToInternet(context: Context): Boolean {
+//    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+//    val network = connectivityManager.activeNetwork ?: return false
+//    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+//    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+//}
+//
+//fun uploadToCloud(photoFile: File, deviceId: String) {
+//    val client = OkHttpClient()
+//    val requestBody = MultipartBody.Builder()
+//        .setType(MultipartBody.FORM)
+//        .addFormDataPart("photo", photoFile.name, photoFile.asRequestBody())
+//        .addFormDataPart("ID_DEVICE", deviceId)
+//        .build()
+//
+//    val request = Request.Builder()
+//        .url("http://localhost:8080/api")
+//        .post(requestBody)
+//        .build()
+//
+//    client.newCall(request).execute()
+//}
+//
+//fun saveLocally(photoFile: File) {
+//    Log.d("CameraX", "Saved locally: ${photoFile.path}")
+//}
 
 @Synchronized
 private fun downloadModel(

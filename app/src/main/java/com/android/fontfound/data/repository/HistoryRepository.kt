@@ -12,14 +12,15 @@ class HistoryRepository @Inject constructor(
     suspend fun fetchHistory(): Result<List<DataItem>> {
         return try {
             val response = apiService.getHistory()
-            if (response.isSuccessful) {
-                val historyList = response.body()?.data?.filterNotNull() ?: emptyList()
+
+            if (response.status == 200) {
+                val historyList = response.data?.filterNotNull() ?: emptyList()
                 Result.Success(historyList)
             } else {
-                Result.Error("Can't load history: ${response.message()}")
+                Result.Error(response.message ?: "An unknown error occurred")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Unknown error occurred")
+            Result.Error(e.localizedMessage ?: "An unknown error occurred")
         }
     }
 }
