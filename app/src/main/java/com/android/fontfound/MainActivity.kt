@@ -18,6 +18,7 @@ import com.android.fontfound.ui.settings.SettingsViewModel
 import com.android.fontfound.ui.settings.updateLocale
 import com.android.fontfound.ui.theme.Theme
 import dagger.hilt.android.AndroidEntryPoint
+
 import java.util.Locale
 
 @AndroidEntryPoint
@@ -27,24 +28,32 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val settingsPreferences = SettingsPreferences.getInstance(dataStore)
-        val isDarkMode = settingsPreferences.getInitialThemeSetting(this)
+
+        val isDarkMode = settingsPreferences.getInitialThemeSetting()
+        val initialLanguage = settingsPreferences.getInitialLanguageSetting()
+        val languageCode = when (initialLanguage) {
+            "Indonesian" -> "id"
+            else -> "en"
+        }
+
+        updateLocale(this, languageCode)
+
+        val settingsViewModel: SettingsViewModel by viewModels()
+
+        settingsViewModel.getLanguageSetting().observe(this) { language ->
+            val updatedLanguageCode = when (language) {
+                "Indonesian" -> "id"
+                else -> "en"
+            }
+            if (Locale.getDefault().language != updatedLanguageCode) {
+                updateLocale(this, updatedLanguageCode)
+            }
+        }
 
         setContent {
-            val settingsViewModel: SettingsViewModel by viewModels()
+            val isDarkTheme = settingsViewModel.getThemeSettings().observeAsState(initial = isDarkMode)
             val historyViewModel: HistoryViewModel by viewModels()
             val scanViewModel: ScanViewModel by viewModels()
-
-            settingsViewModel.getLanguageSetting().observe(this) { language ->
-                val languageCode = when (language) {
-                    "Indonesian" -> "id"
-                    else -> "en"
-                }
-                if (Locale.getDefault().language != languageCode) {
-                    updateLocale(this, languageCode)
-                }
-            }
-
-            val isDarkTheme = settingsViewModel.getThemeSettings().observeAsState(initial = isDarkMode)
 
             Theme(isDarkTheme = isDarkTheme.value) {
                 Surface(
@@ -54,7 +63,7 @@ class MainActivity : ComponentActivity() {
                     MainScreen(
                         settingsViewModel = settingsViewModel,
                         historyViewModel = historyViewModel,
-                        scanViewModel = scanViewModel,
+                        scanViewModel = scanViewModel
                     )
                 }
             }

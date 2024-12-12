@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.android.fontfound.MainActivity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -19,27 +20,37 @@ class SettingsPreferences private constructor(private val dataStore: DataStore<P
     private val themeKey = booleanPreferencesKey("theme_setting")
     private val languageKey = stringPreferencesKey("language_setting")
 
+    // Flow-based theme setting
     fun getThemeSetting(): Flow<Boolean> {
         return dataStore.data.map { preferences ->
             preferences[themeKey] ?: false
         }
     }
 
+    // Save theme setting
     suspend fun saveThemeSetting(isDarkModeActive: Boolean) {
         dataStore.edit { preferences ->
             preferences[themeKey] = isDarkModeActive
         }
     }
 
-    fun getInitialThemeSetting(context: Context): Boolean {
+    // Fetch initial theme setting synchronously
+    fun getInitialThemeSetting(): Boolean {
         return runBlocking {
             dataStore.data.firstOrNull()?.get(themeKey) ?: false
         }
     }
 
+    // Flow-based language setting
     fun getLanguageSetting(): Flow<String> {
         return dataStore.data.map { preferences ->
             preferences[languageKey] ?: "English"
+        }
+    }
+
+    fun getInitialLanguageSetting(): String {
+        return runBlocking {
+            dataStore.data.firstOrNull()?.get(languageKey) ?: "English"
         }
     }
 
