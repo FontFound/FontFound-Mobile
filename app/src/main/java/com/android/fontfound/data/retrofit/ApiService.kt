@@ -15,6 +15,10 @@ interface ApiService {
     suspend fun getHistory(
     ): Response<HistoryResponse>
 
+    @GET("records/{device-id}")
+    suspend fun getHistoryByDevice(
+    ): Response<HistoryResponse>
+
     @Multipart
     @POST("records")
     suspend fun postHistory(
@@ -22,6 +26,6 @@ interface ApiService {
         @Part("createdAt") createdAt: RequestBody,
         @Part("updatedAt") updatedAt: RequestBody,
         @Part("result") result: RequestBody,
-        @Part("device_id") deviceId: RequestBody
+        @Part("device-id") deviceId: RequestBody
     ): Response<HistoryResponse>
 }
