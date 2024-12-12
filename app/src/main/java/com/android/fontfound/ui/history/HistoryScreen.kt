@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,7 +19,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.android.fontfound.R
 import com.android.fontfound.data.response.DataItem
 
 @Composable
@@ -34,8 +38,14 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center)
             )
-        } else {
+        } else if (history.isNotEmpty()) {
             HistoryList(history = history)
+        } else {
+            Text(
+                text = stringResource(id = R.string.no_history_message),
+                modifier = Modifier.align(Alignment.Center),
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 

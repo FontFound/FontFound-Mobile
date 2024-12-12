@@ -23,4 +23,18 @@ class HistoryRepository @Inject constructor(
             Result.Error(e.localizedMessage ?: "An unknown error occurred")
         }
     }
+
+    suspend fun fetchHistoryByDeviceId(deviceId : String): Result<List<DataItem>> {
+        return try {
+            val response = apiService.getHistoryByDevice(deviceId)
+            if (response.isSuccessful) {
+                val historyList = response.body()?.data?.filterNotNull() ?: emptyList()
+                Result.Success(historyList)
+            } else {
+                Result.Error("Can't load history: ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error occurred")
+        }
+    }
 }

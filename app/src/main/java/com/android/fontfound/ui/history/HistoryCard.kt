@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.android.fontfound.data.response.DataItem
+import com.android.fontfound.utils.formatDate
 
 @Composable
 fun HistoryCard(
@@ -58,7 +59,7 @@ fun HistoryCard(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = history.createdAt.orEmpty(),
+                text = formatDate(history.createdAt.orEmpty()),
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

@@ -26,7 +26,6 @@ fun OverlayView(
                 rect.bottom + margin.toInt()
             )
 
-
             val canvasWidth = size.width
             val canvasHeight = size.height
             val rectWidth = expandedRect.width()
