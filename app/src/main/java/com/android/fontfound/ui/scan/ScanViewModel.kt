@@ -21,8 +21,6 @@ class ScanViewModel @Inject constructor(
 
     fun uploadHistory(
         imageFile: File,
-        createdAt: String,
-        updatedAt: String,
         result: String,
         deviceId: String
     ) {
@@ -30,8 +28,6 @@ class ScanViewModel @Inject constructor(
             try {
                 _uploadResult.value = scanRepository.uploadHistory(
                     imageFile = imageFile,
-                    createdAt = createdAt,
-                    updatedAt = updatedAt,
                     result = result,
                     deviceId = deviceId
                 )

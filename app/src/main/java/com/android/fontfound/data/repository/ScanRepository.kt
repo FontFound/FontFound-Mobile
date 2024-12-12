@@ -16,8 +16,6 @@ class ScanRepository @Inject constructor(
 
     suspend fun uploadHistory(
         imageFile: File,
-        createdAt: String,
-        updatedAt: String,
         result: String,
         deviceId: String
     ): Result<String> {
@@ -28,15 +26,11 @@ class ScanRepository @Inject constructor(
                 imageFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
             )
 
-            val createdAtPart = createdAt.toRequestBody("text/plain".toMediaTypeOrNull())
-            val updatedAtPart = updatedAt.toRequestBody("text/plain".toMediaTypeOrNull())
             val resultPart = result.toRequestBody("text/plain".toMediaTypeOrNull())
             val deviceIdPart = deviceId.toRequestBody("text/plain".toMediaTypeOrNull())
 
             val response = apiService.postHistory(
                 file = imagePart,
-                createdAt = createdAtPart,
-                updatedAt = updatedAtPart,
                 result = resultPart,
                 deviceId = deviceIdPart
             )

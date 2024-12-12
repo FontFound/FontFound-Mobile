@@ -10,4 +10,5 @@
     <string name="history_title">History</string>
     <string name="settings_title">Settings</string>
     <string name="firebaseml_model_download_failed">Download Model Failed</string>
+    <string name="no_history_message">No Data History Found</string>
 </resources>

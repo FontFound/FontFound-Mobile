@@ -43,20 +43,14 @@ import com.google.firebase.ml.modeldownloader.CustomModel
 import com.google.firebase.ml.modeldownloader.CustomModelDownloadConditions
 import com.google.firebase.ml.modeldownloader.DownloadType
 import com.google.firebase.ml.modeldownloader.FirebaseModelDownloader
-import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.asRequestBody
 import org.tensorflow.lite.InterpreterApi
 import org.tensorflow.lite.gpu.GpuDelegateFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import java.util.concurrent.Executors
 import com.android.fontfound.data.util.Result
+import com.android.fontfound.utils.reduceFileImage
 
 private var interpreter: InterpreterApi? = null
 private lateinit var fontRecognitionHelper: FontRecognitionHelper
@@ -79,7 +73,7 @@ fun ScanScreen(
     var camera: Camera? by remember { mutableStateOf(null) }
     val previewView = remember { PreviewView(context) }
     var isFlashEnabled by remember { mutableStateOf(false) }
-    var imageCapture: ImageCapture? = remember { null }
+    val imageCapture = remember { mutableStateOf<ImageCapture?>(null) }
     var isLoading by remember { mutableStateOf(false) }
 
     val uploadResult by scanViewModel.uploadResult.observeAsState()
@@ -108,10 +102,11 @@ fun ScanScreen(
                     val cameraProvider = cameraProviderFuture.get()
 
                     val preview = Preview.Builder().build().also {
-                        it.setSurfaceProvider(previewView.surfaceProvider)
+                        it.surfaceProvider = previewView.surfaceProvider
                     }
 
-                    imageCapture = ImageCapture.Builder().build()
+                    val tempImageCapture = ImageCapture.Builder().build()
+                    imageCapture.value = tempImageCapture
 
                     val imageAnalysis = ImageAnalysis.Builder()
                         .setTargetResolution(Size(1280, 720))
@@ -131,7 +126,7 @@ fun ScanScreen(
                             lifecycleOwner,
                             cameraSelector,
                             preview,
-                            imageCapture,
+                            tempImageCapture,
                             imageAnalysis
                         )
                     } catch (e: Exception) {
@@ -192,7 +187,7 @@ fun ScanScreen(
                 Spacer(modifier = Modifier.weight(2f))
 
                 CaptureButton(
-                    imageCapture = imageCapture,
+                    imageCapture = imageCapture.value,
                     context = context,
                     scanViewModel = scanViewModel,
                     deviceId = deviceId ?: "UnknownDevice"
@@ -209,8 +204,7 @@ fun ScanScreen(
                 ) {
                     Icon(
                         painter = if (isFlashEnabled) painterResource(R.drawable.ic_flash_on) else painterResource(R.drawable.ic_flash_off),
-                        contentDescription = "Toggle Flash",
-                        tint = if (isFlashEnabled) Color.Blue else Color.Black
+                        contentDescription = "Toggle Flash"
                     )
                 }
             }
@@ -285,7 +279,6 @@ fun CaptureButton(
     deviceId: String
 ) {
     val cameraExecutor = Executors.newSingleThreadExecutor()
-
     Button(
         onClick = {
             val photoFile = File(
@@ -299,18 +292,13 @@ fun CaptureButton(
                 cameraExecutor,
                 object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                        val currentTimestamp = SimpleDateFormat(
-                            "yyyy-MM-dd'T'HH:mm:ss",
-                            Locale.getDefault()
-                        ).format(Date())
 
+                        val resizedImage = reduceFileImage(photoFile)
                         val safeDeviceId = deviceId.ifBlank { "UnknownDevice" }
 
                         scanViewModel.uploadHistory(
-                            imageFile = photoFile,
-                            createdAt = currentTimestamp,
-                            updatedAt = currentTimestamp,
-                            result = "Font: ${currentFontName.value}, Confidence: ${currentConfidence.floatValue}",
+                            imageFile = resizedImage,
+                            result = "Font: ${currentFontName.value}, Confidence: ${currentConfidence.floatValue * 100}%",
                             deviceId = safeDeviceId
                         )
                     }
@@ -335,26 +323,6 @@ fun isConnectedToInternet(context: Context): Boolean {
     val network = connectivityManager.activeNetwork ?: return false
     val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
     return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-}
-
-fun uploadToCloud(photoFile: File, deviceId: String) {
-    val client = OkHttpClient()
-    val requestBody = MultipartBody.Builder()
-        .setType(MultipartBody.FORM)
-        .addFormDataPart("photo", photoFile.name, photoFile.asRequestBody())
-        .addFormDataPart("ID_DEVICE", deviceId)
-        .build()
-
-    val request = Request.Builder()
-        .url("http://localhost:8080/api")
-        .post(requestBody)
-        .build()
-
-    client.newCall(request).execute()
-}
-
-fun saveLocally(photoFile: File) {
-    Log.d("CameraX", "Saved locally: ${photoFile.path}")
 }
 
 @Synchronized
@@ -396,8 +364,6 @@ private fun copyModelToInternalStorage(context: Context, modelFile: File): Strin
     modelFile.copyTo(targetFile, overwrite = true)
     return targetFile.absolutePath
 }
-
-
 
 private fun initializeInterpreter(
     model: CustomModel,
