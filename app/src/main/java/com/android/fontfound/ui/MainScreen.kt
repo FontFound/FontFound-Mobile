@@ -25,6 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -38,10 +40,11 @@ import com.android.fontfound.R
 import com.android.fontfound.navigation.Navigation
 import com.android.fontfound.navigation.TopLevelDestination
 import com.android.fontfound.ui.history.HistoryViewModel
+import com.android.fontfound.ui.scan.ScanViewModel
 import com.android.fontfound.ui.settings.SettingsViewModel
 
 @Composable
-fun MainScreen(settingsViewModel: SettingsViewModel, historyViewModel: HistoryViewModel) {
+fun MainScreen(settingsViewModel: SettingsViewModel, historyViewModel: HistoryViewModel, scanViewModel: ScanViewModel) {
     val navController = rememberNavController()
     var showBottomBar by remember { mutableStateOf(true) }
 
@@ -64,6 +67,7 @@ fun MainScreen(settingsViewModel: SettingsViewModel, historyViewModel: HistoryVi
             modifier = Modifier.padding(innerPadding),
             settingsViewModel = settingsViewModel,
             historyViewModel = historyViewModel,
+            scanViewModel = scanViewModel,
             onShowBottomBar = { showBottomBar = it }
         )
     }
@@ -100,7 +104,7 @@ fun BottomBar(navController: NavHostController) {
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .offset(y = -30.dp)
+                .offset(y = (-30).dp)
         ) {
             CameraButton(navController = navController)
         }

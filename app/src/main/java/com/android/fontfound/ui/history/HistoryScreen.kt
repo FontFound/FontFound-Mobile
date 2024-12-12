@@ -18,11 +18,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.android.fontfound.data.response.ListEventsItem
+import com.android.fontfound.data.response.DataItem
 
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel) {
-    val events by viewModel.listEvents.observeAsState(emptyList())
+    val history by viewModel.listHistory.observeAsState(emptyList())
     val isLoading by viewModel.isLoading.observeAsState(false)
 
     Box(
@@ -35,7 +35,7 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                 modifier = Modifier.align(Alignment.Center)
             )
         } else {
-            EventList(events = events)
+            HistoryList(history = history)
         }
     }
 
@@ -53,18 +53,18 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
 }
 
 @Composable
-fun EventList(
-    events: List<ListEventsItem>
+fun HistoryList(
+    history: List<DataItem>
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(8.dp)
     ) {
         items(
-            items = events,
-            key = { event -> event.id }
-        ) { event ->
-            HistoryCard(event = event)
+            items = history,
+            key = { item -> item.id ?: item.hashCode() }
+        ) { historyItem ->
+            HistoryCard(history = historyItem)
         }
     }
 }

@@ -9,11 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,8 +23,6 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     val isDarkMode = viewModel.getThemeSettings().observeAsState(initial = false)
     val currentLanguage = viewModel.getLanguageSetting().observeAsState(initial = "English")
     val context = LocalContext.current
-
-    var selectedLanguage by remember { mutableStateOf(currentLanguage.value) }
 
     Column {
         Row(
@@ -65,10 +59,9 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 )
             }
             LanguageOption(
-                currentLanguage = selectedLanguage,
+                currentLanguage = currentLanguage.value,
                 onLanguageChange = { newLanguage ->
-                    if (newLanguage != selectedLanguage) {
-                        selectedLanguage = newLanguage
+                    if (newLanguage != currentLanguage.value) {
                         viewModel.saveLanguageSetting(newLanguage)
 
                         val languageCode = when (newLanguage) {

@@ -1,6 +1,7 @@
 package com.android.fontfound.data.di
 
 import com.android.fontfound.data.repository.HistoryRepository
+import com.android.fontfound.data.repository.ScanRepository
 import com.android.fontfound.data.retrofit.ApiService
 import dagger.Module
 import dagger.Provides
@@ -16,5 +17,11 @@ object RepositoryModule {
     @Singleton
     fun provideHistoryRepository(apiService: ApiService): HistoryRepository {
         return HistoryRepository(apiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideScanRepository(apiService: ApiService): ScanRepository {
+        return ScanRepository(apiService)
     }
 }

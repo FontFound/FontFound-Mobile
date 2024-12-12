@@ -19,11 +19,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import com.android.fontfound.data.response.ListEventsItem
+import com.android.fontfound.data.response.DataItem
 
 @Composable
 fun HistoryCard(
-    event: ListEventsItem
+    history: DataItem
 ) {
     Card(
         modifier = Modifier
@@ -37,20 +37,19 @@ fun HistoryCard(
                 .fillMaxWidth()
         ) {
             Image(
-                painter = rememberAsyncImagePainter(event.imageLogo),
-                contentDescription = "Event Image",
+                painter = rememberAsyncImagePainter(history.imageUrl),
+                contentDescription = "History Image",
                 modifier = Modifier
                     .fillMaxWidth()
                     .size(200.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .padding(8.dp)
                     .background(Color.LightGray)
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = event.name,
+                text = history.result.orEmpty(),
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -59,7 +58,7 @@ fun HistoryCard(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = event.description,
+                text = history.createdAt.orEmpty(),
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
