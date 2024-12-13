@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,15 +28,22 @@ import androidx.compose.ui.unit.dp
 import com.android.fontfound.R
 import com.android.fontfound.data.response.DataItem
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel) {
     val history by viewModel.listHistory.observeAsState(emptyList())
     val isLoading by viewModel.isLoading.observeAsState(false)
 
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isLoading,
+        onRefresh = { viewModel.fetchHistory() }
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .pullRefresh(pullRefreshState)
     ) {
         if (isLoading) {
             CircularProgressIndicator(
@@ -46,6 +57,16 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                 modifier = Modifier.align(Alignment.Center),
                 style = MaterialTheme.typography.bodyMedium
             )
+        }
+
+        PullRefreshIndicator(
+            refreshing = isLoading,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
+
+        if (isLoading && history.isEmpty()) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         }
     }
 

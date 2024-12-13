@@ -1,6 +1,5 @@
 package com.android.fontfound.data.repository
 
-import android.widget.Toast
 import com.android.fontfound.data.retrofit.ApiService
 import com.android.fontfound.data.util.Result
 import okhttp3.MediaType.Companion.toMediaTypeOrNull

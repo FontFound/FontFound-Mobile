@@ -12,10 +12,12 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.android.fontfound.data.util.Result
+import com.android.fontfound.utils.DeviceIdProvider
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val historyRepository: HistoryRepository
+    private val historyRepository: HistoryRepository,
+    private val deviceIdProvider: DeviceIdProvider
 ) : ViewModel() {
 
     private val _listHistory = MutableLiveData<List<DataItem>>(emptyList())
@@ -31,9 +33,10 @@ class HistoryViewModel @Inject constructor(
         fetchHistory()
     }
 
-    private fun fetchHistory() = viewModelScope.launch {
+    fun fetchHistory() = viewModelScope.launch {
+        val deviceId = deviceIdProvider.getDeviceId()
         _isLoading.value = true
-        val result = historyRepository.fetchHistory()
+        val result = historyRepository.fetchHistoryByDeviceId(deviceId)
         _isLoading.value = false
         when (result) {
             is Result.Success -> {
